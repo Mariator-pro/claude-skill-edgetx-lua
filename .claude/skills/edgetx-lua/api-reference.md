@@ -80,7 +80,7 @@ lcd.drawText(0, 0, "Hot", SMLSIZE + myRed)
 ### Shapes
 ```lua
 lcd.drawLine(x1, y1, x2, y2, pattern, flags)
-   -- pattern: omit / 0 for solid, DOTTED for dotted (SOLID is not a documented constant)
+   -- pattern: SOLID or DOTTED (omit / 0 also draws a solid line). Both are documented constants.
 lcd.drawRectangle(x, y, w, h, flags [, thickness])
 lcd.drawFilledRectangle(x, y, w, h, flags [, opacity])
 lcd.drawCircle(x, y, radius, flags)
@@ -154,7 +154,7 @@ Returns `(rssi, alarmLevel)` for the primary RX. `0` when no telemetry.
 
 ### Time
 ```lua
-local t = getTime()    -- 10 ms ticks since power-on, integer (wraps after ~248 days)
+local t = getTime()    -- 10 ms ticks since power-on, integer (32-bit; good for ~497 days, no overflow in practice)
 local d = getDateTime()
 -- d.year, d.mon, d.day, d.hour, d.min, d.sec
 ```

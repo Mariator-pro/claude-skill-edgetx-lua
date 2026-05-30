@@ -13,7 +13,8 @@
 
 local state = {
   lastBeep = 0,
-  threshold = 70,     -- value is in 0.1V units when read via UNIT_VOLTS sensors
+  threshold = 70,     -- 7.0 V, expressed in 0.1 V units (our own scale; getValue("RxBt")
+                      -- returns float volts, which run() converts below)
 }
 
 local function init()

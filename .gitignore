@@ -10,3 +10,6 @@
 
 # Logs / scratch
 *.log
+
+# Local copy of the official EdgeTX Lua reference (used to verify the skill)
+lua-reference-guide/

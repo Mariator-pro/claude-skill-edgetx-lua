@@ -20,6 +20,10 @@ A widget renders inside a zone on the Main View or Telemetry Screen. Multiple wi
 ```
 Optional companion file: `/WIDGETS/<WidgetName>/icon.png` (for the widget picker).
 
+> The **widget folder name** (`<WidgetName>`) must be **≤ 8 characters** — this is
+> separate from the `name` field below (≤ 10 chars). A folder name longer than 8
+> chars can prevent the widget from loading.
+
 **Required return table:**
 ```lua
 return {
@@ -49,6 +53,13 @@ return {
 - `BOOL` — toggles between **0 and 1** (not a Lua `true`/`false`!)
 - `STRING` — text input, see length limit above
 - `COLOR` — color value; default with a `COLOR_THEME_*` constant
+- `TIMER` — pick one of the model timers
+- `SWITCH` — pick a switch
+- `TEXT_SIZE` — pick a font size (small … XXL)
+- `ALIGNMENT` — pick left / center / right
+- `SLIDER` — numeric value via a slider (EdgeTX 2.11+)
+- `CHOICE` — numeric value from a custom popup list (EdgeTX 2.11+)
+- `FILE` — pick a file from storage; filename ≤ 12 chars (EdgeTX 2.11+)
 
 Example:
 ```lua
@@ -137,17 +148,20 @@ return {
 { "Name", VALUE, min, max, default }
 ```
 
-**Mix-script input limits (verified):**
+**Mix-script input/output limits (verified):**
 
 | Limit                       | Value          |
 | --------------------------- | -------------- |
 | Max number of inputs        | **6**          |
+| Max number of outputs       | **6**          |
 | `VALUE` input name length   | ≤ 8 characters |
 | `VALUE` min/max range       | **-128 to +127** (NOT ±1024) |
+| Output name length          | **≤ 4 characters** (5 if the first char is `+`/`-`) |
 
 `outputs` example:
 ```lua
 local outputs = { "Out1", "Out2" }     -- names appear in Companion as LUA1a, LUA1b...
+                                       -- each output name must be 4 chars or less
 ```
 
 **`run(...)`** receives one argument per input (in order) and must return one value per output. It is called on every mixer cycle (target ~30 ms) — extremely time-critical. Do **no** I/O, no `lcd.*`, and avoid allocations.

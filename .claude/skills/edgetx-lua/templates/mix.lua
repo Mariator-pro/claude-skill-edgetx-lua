@@ -12,7 +12,7 @@ local inputs = {
   { "MinPct", VALUE, -100, 100, 0 },    -- VALUE: range must fit -128..+127
 }
 
-local outputs = { "ThrOut" }
+local outputs = { "ThrO" }   -- output names: max 4 chars (5 if the first char is +/-)
 
 local function init()
   -- Called once when the model is loaded. Keep this very cheap.

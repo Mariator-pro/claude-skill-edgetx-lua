@@ -11,6 +11,7 @@ These will make your script seem to "not exist" without any error:
 - **Widget option name > 10 chars or contains a space**. Whole `options` array is rejected → widget loads but is unconfigurable.
 - **More than 5 widget options** on EdgeTX 2.10 (10 on 2.11+). Extra options are silently dropped.
 - **Mix script with more than 6 inputs** or with `VALUE` name > 8 chars — input is rejected.
+- **Mix script output name > 4 chars** (5 if it starts with `+`/`-`) — the output is rejected / silently truncated.
 
 ## Wrong value ranges
 

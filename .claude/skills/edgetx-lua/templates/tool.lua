@@ -19,17 +19,14 @@ local function init()
   state.counter = 0
 end
 
+local STICK_LABELS  = { "Thr", "Rud", "Ele", "Ail" }
+local STICK_SOURCES = { "thr", "rud", "ele", "ail" }
+
 local function drawSticks()
-  local sticks = {
-    { name = "Thr", v = getValue("thr") },
-    { name = "Rud", v = getValue("rud") },
-    { name = "Ele", v = getValue("ele") },
-    { name = "Ail", v = getValue("ail") },
-  }
-  for i, s in ipairs(sticks) do
+  for i = 1, #STICK_LABELS do
     local y = 30 + (i - 1) * 24
-    lcd.drawText(10, y, s.name, MIDSIZE + COLOR_THEME_SECONDARY1)
-    lcd.drawNumber(LCD_W - 10, y, s.v,
+    lcd.drawText(10, y, STICK_LABELS[i], MIDSIZE + COLOR_THEME_SECONDARY1)
+    lcd.drawNumber(LCD_W - 10, y, getValue(STICK_SOURCES[i]),
                    MIDSIZE + BOLD + RIGHT + COLOR_THEME_PRIMARY1)
   end
 end
