@@ -60,7 +60,7 @@ What is **NOT** available — do not even try:
 ## Drawing pitfalls
 
 - **Forgetting `lcd.clear()`** in telemetry/tool `run`: the previous frame remains visible underneath new draws. Always clear first.
-- **Drawing outside the widget zone:** writes outside the zone collide with other widgets or the status bar — they may be clipped or not, depending on EdgeTX version. Stay strictly inside `zone.x..zone.x+zone.w` and `zone.y..zone.y+zone.h`.
+- **Drawing outside the widget zone:** widgets draw in **zone-local** coordinates — `(0,0)` is the top-left of the zone and `zone.x`/`zone.y` are effectively `0`. Stay strictly inside `0..zone.w` and `0..zone.h`; writing beyond that collides with other widgets or the status bar (clipped or not, version-dependent). The old "add `zone.x`/`zone.y`" rule from OpenTX docs is a harmless no-op on modern EdgeTX, not a requirement. (Telemetry/fullscreen scripts and tools own the whole screen, where `(0,0)` is the screen corner.)
 - **Hard-coded coordinates** break on radios with a different `LCD_W`/`LCD_H` (Pocket is portrait!). Compute everything from `LCD_W`/`LCD_H` or `zone.w`/`zone.h`.
 - **Old color constants** (`BLACK`, `WHITE`, `RED`...) still work but ignore the user's theme. Prefer `COLOR_THEME_*`.
 - **`PREC1`/`PREC2`** on `drawNumber`: pass the raw integer multiplied by 10 or 100 — `drawNumber(x, y, 235, PREC1)` renders as `23.5`. Forgetting this prints the wrong value.

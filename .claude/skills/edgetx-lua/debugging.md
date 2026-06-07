@@ -40,7 +40,7 @@ When you cannot use the simulator (e.g. script behaves differently on hardware),
 local function refresh(widget)
   -- ... normal drawing ...
   -- debug overlay (remove before release)
-  lcd.drawText(widget.zone.x, widget.zone.y, tostring(widget.lastVal),
+  lcd.drawText(0, 0, tostring(widget.lastVal),   -- zone-local: (0,0) = zone corner
                SMLSIZE + COLOR_THEME_WARNING)
 end
 ```

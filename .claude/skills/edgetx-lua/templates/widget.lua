@@ -45,6 +45,9 @@ local function background(widget)
 end
 
 local function refresh(widget, event, touchState)
+  -- Widgets draw in ZONE-LOCAL coordinates: (0,0) is the top-left of the zone,
+  -- so use zone.w/zone.h for sizing and stay within 0..w / 0..h. There is no
+  -- need to add zone.x/zone.y (they are effectively 0 on modern EdgeTX).
   local z = widget.zone
 
   -- Always read inside refresh too, in case background() didn't run recently
@@ -52,14 +55,14 @@ local function refresh(widget, event, touchState)
   widget.value = v
 
   -- Header label
-  lcd.drawText(z.x + 4, z.y + 2, widget.label,
+  lcd.drawText(4, 2, widget.label,
                SMLSIZE + COLOR_THEME_SECONDARY1)
 
   -- Centered value
   local txt = tostring(math.floor(v))
   local tw, th = lcd.sizeText(txt, DBLSIZE + BOLD)
-  lcd.drawText(z.x + (z.w - tw) / 2,
-               z.y + (z.h - th) / 2 - 4,
+  lcd.drawText((z.w - tw) / 2,
+               (z.h - th) / 2 - 4,
                txt,
                DBLSIZE + BOLD + COLOR_THEME_PRIMARY1)
 
@@ -69,7 +72,7 @@ local function refresh(widget, event, touchState)
     local pct = (v - lo) / (hi - lo)
     if pct < 0 then pct = 0 elseif pct > 1 then pct = 1 end
     local barW = math.floor((z.w - 8) * pct)
-    lcd.drawFilledRectangle(z.x + 4, z.y + z.h - 6, barW, 4, widget.options.Color)
+    lcd.drawFilledRectangle(4, z.h - 6, barW, 4, widget.options.Color)
   end
 
   -- When the widget is in fullscreen mode, event/touchState will be set.

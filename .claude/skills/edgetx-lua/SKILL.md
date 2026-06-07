@@ -58,3 +58,5 @@ Invoke this skill whenever the user works with:
 ## Source of truth
 
 The authoritative API is the official EdgeTX Lua Reference Guide at <https://luadoc.edgetx.org/>. The site currently documents **EdgeTX 2.10** as its baseline, with explicit notes about changes in 2.11 and 2.12 (e.g. widget option count, STRING length). The files in this skill have been **cross-checked against that guide** for the core APIs (script type return tables, filename limits, widget option limits, key/touch events, `getValue` behaviour, `lcd.drawText` signature, flag/color constants). If something is missing or behavior contradicts the guide, the guide wins — and the user should be told so the skill can be updated.
+
+One known exception: for **widget drawing coordinates**, the guide (and `llms-full.txt`) still reflects the legacy OpenTX screen-origin model ("add `zone.x`/`zone.y`"). On modern EdgeTX, widgets actually draw in **zone-local** coordinates (`(0,0)` = zone corner, `zone.x`/`zone.y` ≈ `0`); see `script-types.md` → Widget.

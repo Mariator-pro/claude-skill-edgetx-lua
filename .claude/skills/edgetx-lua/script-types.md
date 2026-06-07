@@ -71,12 +71,22 @@ local options = {
 }
 ```
 
-**`create(zone, options)`** returns the widget's per-instance state table. `zone` has `x`, `y`, `w`, `h` — the rectangle the widget owns. **Never draw outside this rectangle.**
+**`create(zone, options)`** returns the widget's per-instance state table. `zone` has `x`, `y`, `w`, `h` — the rectangle the widget owns. Use `zone.w`/`zone.h` for sizing; **stay within `0..zone.w` / `0..zone.h`** (see coordinate note below).
+
+> **Coordinate origin: a widget draws in ZONE-LOCAL coordinates.**
+> `(0, 0)` is the **top-left of the widget's zone**, and `zone.x`/`zone.y` are
+> effectively `0`. Draw within `0..zone.w` / `0..zone.h`, e.g.
+> `lcd.drawFilledRectangle(0, 0, zone.w, zone.h, …)`.
+> Legacy OpenTX docs (still echoed by luadoc.edgetx.org / `llms-full.txt`) say to
+> add `zone.x`/`zone.y`; on modern EdgeTX that is a harmless no-op but
+> unnecessary.
+> Note: this is **widget-specific**. Telemetry/fullscreen scripts and tools own
+> the whole screen, where `(0,0)` is the screen corner.
 
 **`refresh(widget, event, touchState)`** is called on every redraw (typically every ~50 ms / 20 Hz on color radios when the widget is visible).
 - `event` is `nil` when the widget is not in fullscreen mode; `0` or a key/touch event constant when fullscreen.
 - `touchState` is a table on touch radios when the current event is a touch event; otherwise `nil`.
-- Use `lcd.drawText(zone.x + dx, zone.y + dy, ...)` — always offset by the zone.
+- Draw in zone-local coordinates: `lcd.drawText(dx, dy, ...)` with `dx`/`dy` in `0..zone.w` / `0..zone.h`. (`zone.x`/`zone.y` are `0` on modern EdgeTX — see the coordinate note above.)
 - `lcd.clear()` is NOT required in widget `refresh` — EdgeTX paints the theme background for you.
 
 **`background(widget)`** runs when the widget is *not* visible but still loaded. Use it to keep state warm (timers, logging) but do **not** call `lcd.*` here.
