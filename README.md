@@ -30,11 +30,12 @@ A Claude Code Skill is a small bundle of documentation that Claude loads automat
 - **Hardware specs**: color/touch radios (TX16S Mk I–III, X10, Horus) and compact color (Boxer, Pocket, T-Pro v2)
 - **Common pitfalls**: silent-load failures, filename limits, value-range gotchas, the Lua subset's restrictions
 - **Debugging tips**: Companion simulator workflow, `print()` console, `pcall` patterns
-- **Templates**: minimal working boilerplates for all five script types
+- **Color themes**: `theme.yml` structure, the 13 OS color variables, the authoritative color→UI-element map, and how those slots map to the Lua `COLOR_THEME_*` constants
+- **Templates**: minimal working boilerplates for all five script types, plus a commented `theme.yml`
 
 When you ask Claude something like *"build me a widget that shows RSSI as a bar"* or *"why does my telemetry script not load on the radio?"*, Claude will read the relevant pieces of the skill and answer with EdgeTX-specific knowledge instead of generic Lua advice.
 
-All content is verified against the official [EdgeTX Lua Reference Guide](https://luadoc.edgetx.org/).
+Lua content is verified against the official [EdgeTX Lua Reference Guide](https://luadoc.edgetx.org/); the theme reference is verified against the [EdgeTX themes repo](https://github.com/EdgeTX/themes) (`structure.md`) and the [EdgeTX User Manual](https://manual.edgetx.org/color-radios/radio-settings/themes).
 
 ---
 
@@ -70,12 +71,14 @@ Once installed, the skill is invoked automatically. Triggers include:
 - Working with `.lua` files inside `SCRIPTS/`, `WIDGETS/`, `SCRIPTS/TELEMETRY/`, `SCRIPTS/MIXES/`, `SCRIPTS/FUNCTIONS/`, `SCRIPTS/TOOLS/`
 - Mentioning EdgeTX API calls (`lcd.*`, `getValue`, `model.*`, telemetry sensors)
 - Asking about widgets, telemetry pages, mixer scripts, custom function scripts, or radio tools
+- Creating or editing color themes (`/THEMES/`, `theme.yml`, the 13 color variables)
 
 Example prompts that activate the skill:
 
 ```
 "Write me a widget that shows RxBatt as a vertical bar, color thresholds at 7.0V and 7.4V."
 "Why does my telemetry script work in the simulator but not on the radio?"
+"Build me a dark EdgeTX theme with an orange accent and tell me which colors I set."
 ```
 
 ---
@@ -90,12 +93,14 @@ Example prompts that activate the skill:
 ├── hardware.md           Display sizes & capabilities per radio
 ├── pitfalls.md           Silent failures, value ranges, Lua subset
 ├── debugging.md          Simulator workflow, print(), pcall, checklist
+├── themes.md             theme.yml structure, 13 color variables, color→UI map
 └── templates/
     ├── widget.lua
     ├── telemetry.lua
     ├── mix.lua
     ├── function.lua
-    └── tool.lua
+    ├── tool.lua
+    └── theme.yml         Commented color-theme starting point
 ```
 
 ---
