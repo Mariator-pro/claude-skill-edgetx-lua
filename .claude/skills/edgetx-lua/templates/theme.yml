@@ -1,0 +1,33 @@
+---
+# EdgeTX color theme template.
+# Place this file in /THEMES/<YourThemeName>/theme.yml on the SD card,
+# alongside logo.png + screenshot1..3.png (see themes.md -> Folder structure).
+# The first line MUST be the `---` document marker. Indent with spaces, not tabs.
+
+summary:
+  name: My Theme            # shown in the EdgeTX theme selector
+  author: Your Name         # shown in the UI
+  info: A dark example theme # short, user-visible blurb
+  # description: optional longer text (NOT shown in the UI)
+
+colors:
+  # --- Foregrounds (text / icons) ------------------------------------------
+  PRIMARY1:   0xF8FCF8   # Label text; button text (not focused)
+  PRIMARY2:   0x081828   # Bar text & icons; editable-field bg; focused button text
+  PRIMARY3:   0x385C68   # Scroll marker; inactive TopBar icon parts
+
+  # --- Backgrounds / surfaces ----------------------------------------------
+  SECONDARY1: 0x507C90   # TopBar/BottomBar bg; slider & trim paths/shadows
+  SECONDARY2: 0x507C90   # Label bg; button bg
+  SECONDARY3: 0x081828   # Main screen bg; popup bg
+
+  # --- State highlights -----------------------------------------------------
+  FOCUS:      0xA0C4D0   # Focused/selected item bg; logo bg; selected icon bg
+  EDIT:       0xE8F8A8   # Editable-field bg while editing
+  ACTIVE:     0x604060   # "On/active" button & variable-field bg
+  WARNING:    0xE00000   # Warning text (text-only; never paints a fill)
+  DISABLED:   0x687888   # Greyed-out / disabled elements
+
+  # --- Quick Menu (EdgeTX 2.12+; ignored on older firmware) ----------------
+  QM_BG:      0x081828   # Quick Menu background
+  QM_FG:      0xF8FCF8   # Quick Menu foreground

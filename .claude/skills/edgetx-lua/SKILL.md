@@ -1,6 +1,6 @@
 ---
 name: edgetx-lua
-description: Use when writing, reviewing, or debugging EdgeTX Lua scripts (widgets, telemetry, mix, function, or tool scripts). Provides API reference, script lifecycle structure, hardware specs for color radios (TX16S/X10/Horus/Boxer/T-Pro/TX12), code templates, common pitfalls, and debugging tips so EdgeTX-specific information does not need to be researched on the web each time.
+description: Use when writing, reviewing, or debugging EdgeTX Lua scripts (widgets, telemetry, mix, function, or tool scripts) or when creating/editing EdgeTX color themes (theme.yml, the 13 OS color variables). Provides API reference, script lifecycle structure, hardware specs for color radios (TX16S/X10/Horus/Boxer/T-Pro/TX12), code templates, theme structure and color-to-UI-element mapping, common pitfalls, and debugging tips so EdgeTX-specific information does not need to be researched on the web each time.
 ---
 
 # EdgeTX Lua Scripting
@@ -14,6 +14,7 @@ Invoke this skill whenever the user works with:
 - EdgeTX API calls (`lcd.*`, `getValue`, `model.*`, `getFieldInfo`, telemetry sensors)
 - Discussions about EdgeTX widgets, telemetry screens, mixer scripts, or radio tools
 - Migration questions involving OpenTX/EdgeTX scripts
+- Creating or editing **color themes** (`/THEMES/`, `theme.yml`, the 13 color variables)
 
 ## Quick decision guide
 
@@ -28,6 +29,7 @@ Invoke this skill whenever the user works with:
 | Anything reading sticks/switches/sensors | `api-reference.md` → Input/Events     |
 | Anything reading/writing model setup | `api-reference.md` → Model API           |
 | Storing data on SD card              | `api-reference.md` → File/IO             |
+| A color theme (`theme.yml`)          | `themes.md`                              |
 
 ## File index
 
@@ -36,7 +38,9 @@ Invoke this skill whenever the user works with:
 - **`hardware.md`** — Display resolutions, capabilities, and color-vs-monochrome differences for radios the user cares about (Horus-class color/touch + compact radios).
 - **`pitfalls.md`** — Performance/memory limits, Lua subset restrictions (no `os`, no `package`, etc.), refresh timing, save-after-write requirements, OpenTX→EdgeTX breaking gotchas worth knowing even if migration is not the focus.
 - **`debugging.md`** — `print()` and the LCD console, EdgeTX Companion simulator, runtime errors, common "script halted" causes, and how to verify before flashing to the radio.
+- **`themes.md`** — Color theme creation: `/THEMES/` folder layout, `theme.yml` format, the 13 OS color variables, the authoritative color→UI-element map, contrast pairs to keep legible, the in-radio theme editor workflow, and how the slots map to Lua `COLOR_THEME_*` constants.
 - **`templates/*.lua`** — Minimal working skeletons for each script type. Copy-paste starting points.
+- **`templates/theme.yml`** — Commented starting point for a color theme (all 13 variables with their roles inline).
 
 ## How to use the references
 
