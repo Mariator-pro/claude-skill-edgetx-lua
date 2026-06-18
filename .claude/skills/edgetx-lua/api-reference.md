@@ -393,6 +393,23 @@ Notes:
 - File handles are an EdgeTX number/userdata — pass them to `io.*` functions, do not call `f:read(...)` method-style (won't work).
 - Limit writes — SD card I/O blocks the radio. Avoid per-frame writes.
 
+### Listing a directory — `dir(path)`
+Iterator over the entries in a folder (available since OpenTX/EdgeTX 2.5.0). Each iteration yields a **plain filename string** — not a path:
+
+```lua
+for fname in dir("/SOUNDS/en/scripts/LIPONY") do
+  -- fname is a string, e.g. "warn.wav"
+end
+```
+
+Notes:
+- Pass the path **without a trailing slash**.
+- Yields **bare filenames** (strings), not full paths — prepend the folder yourself if you need a path.
+- **Throws if the folder does not exist** — wrap in `pcall` when the folder may be missing.
+- Filter with the free string functions, not method syntax (see pitfalls.md): `string.match(string.lower(fname), "%.wav$")`, **not** `fname:lower():match(...)`.
+
+Reference: <https://luadoc.edgetx.org/lua-api-reference/filesystem/dir>
+
 ### JSON
 Some EdgeTX builds ship a `libjson` helper as a tool. Generally, write a tiny parser yourself or store data in plain `key=value` lines.
 

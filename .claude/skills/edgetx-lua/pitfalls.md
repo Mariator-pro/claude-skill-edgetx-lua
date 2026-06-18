@@ -37,6 +37,10 @@ What EdgeTX provides:
 - A *restricted* `io` (see api-reference)
 - `bit32` (or `bit` on older builds) for bitwise ops
 
+**No method syntax on strings.** The `string` library exists, but it is **not bound as a metatable on string values** on EdgeTX. So `s:lower()`, `s:match(...)`, `s:sub(...)` — any `string:method()` call — fails on real firmware (and in the simulator). Always use the free functions: `string.lower(s)`, `string.match(s, ...)`, `string.sub(s, ...)`. This affects *all* string methods, not a specific subset, because the metatable binding itself is missing — it is build-wide, not version-specific. (Same reason file handles reject `f:read(...)` — see api-reference.md.)
+
+> **Test-harness blind spot:** a host Lua interpreter (e.g. the Lua 5.5 test harness) *does* install the string metatable, so `fname:lower():match("%.wav$")` passes in tests and then throws on the device — a classic "runs in the test, breaks on the hardware" trap. Often the throw is swallowed silently inside a `pcall`. Write `string.match(string.lower(fname), "%.wav$")` instead.
+
 What is **NOT** available — do not even try:
 - `os` — no `os.time`, `os.date`, `os.execute`, `os.getenv`
 - `require` — use `loadScript` instead

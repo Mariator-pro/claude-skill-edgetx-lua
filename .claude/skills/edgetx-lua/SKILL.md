@@ -28,7 +28,7 @@ Invoke this skill whenever the user works with:
 | Anything that draws on screen        | `api-reference.md` → LCD section + `hardware.md` |
 | Anything reading sticks/switches/sensors | `api-reference.md` → Input/Events     |
 | Anything reading/writing model setup | `api-reference.md` → Model API           |
-| Storing data on SD card              | `api-reference.md` → File/IO             |
+| Storing data on SD card / listing a directory (`dir()`) | `api-reference.md` → File/IO    |
 | A color theme (`theme.yml`)          | `themes.md`                              |
 
 ## File index
