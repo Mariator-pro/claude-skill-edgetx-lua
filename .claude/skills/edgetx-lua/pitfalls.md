@@ -68,6 +68,7 @@ What is **NOT** available — do not even try:
 - **Hard-coded coordinates** break on radios with a different `LCD_W`/`LCD_H` (Pocket is portrait!). Compute everything from `LCD_W`/`LCD_H` or `zone.w`/`zone.h`.
 - **Old color constants** (`BLACK`, `WHITE`, `RED`...) still work but ignore the user's theme. Prefer `COLOR_THEME_*`.
 - **`PREC1`/`PREC2`** on `drawNumber`: pass the raw integer multiplied by 10 or 100 — `drawNumber(x, y, 235, PREC1)` renders as `23.5`. Forgetting this prints the wrong value.
+- **Non-ASCII characters in drawn text don't render.** The built-in fonts are basic-Latin only; typographic punctuation (em/en dashes `—` `–`, curly quotes `“ ” ‘ ’`, ellipsis `…`, non-breaking space) has no glyph and draws as a *blank gap*, not a fallback box — `"change — no data"` shows as `"change  no data"`. Keep every user-facing string pure ASCII (`-`, `"`, `'`, `...`), including empty-value placeholders (`"-"`, not `"—"`). Editors often auto-"smarten" `--` into `—` on paste — check the literal.
 
 ## API and value pitfalls
 
