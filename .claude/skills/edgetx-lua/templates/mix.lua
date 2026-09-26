@@ -9,10 +9,10 @@
 
 local inputs = {
   { "Thr",    SOURCE },                 -- SOURCE: range -1024..+1024
-  { "MinPct", VALUE, -100, 100, 0 },    -- VALUE: range must fit -128..+127
+  { "MinPct", VALUE, -100, 100, 0 },    -- VALUE: own min/max (default -100..100 if omitted)
 }
 
-local outputs = { "ThrO" }   -- output names: max 4 chars (5 if the first char is +/-)
+local outputs = { "ThrO" }   -- output names are cut to 6 chars
 
 local function init()
   -- Called once when the model is loaded. Keep this very cheap.

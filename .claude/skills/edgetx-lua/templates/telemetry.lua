@@ -1,13 +1,19 @@
 -- Minimal EdgeTX fullscreen telemetry script template.
+-- B/W RADIOS ONLY (Taranis family, 128x64). Color radios have no telemetry
+-- scripts; use a widget in fullscreen mode instead (templates/widget.lua).
+-- Not tested on hardware.
 -- Place as:  /SCRIPTS/TELEMETRY/mytlm.lua
 --   (IMPORTANT: filename without .lua must be 6 characters or less!
 --    `mytelem.lua` would be SILENTLY ignored by EdgeTX.)
 -- Then in Model Setup -> Display, add a screen of type "Script" and pick this file.
 --
--- Shows RSSI, battery (RxBt), and a custom sensor in a 2x2 grid.
+-- Shows ELRS link quality, RSSI, battery (RxBt) and altitude in a 2x2 grid.
+-- B/W radios have no COLOR_THEME_* constants (they would be nil and crash);
+-- use plain flags only. BOLD is a real bold attribute here.
 
 local state = {
   lastUpdate = 0,
+  rqly       = 0,
   rssi       = 0,
   rxBatt     = 0,
   altitude   = 0,
@@ -19,20 +25,19 @@ local function init()
 end
 
 local function readSensors()
-  state.rssi     = getValue("RSSI")  or 0
-  state.rxBatt   = getValue("RxBt")  or 0
-  state.altitude = getValue("Alt")   or 0
+  state.rqly     = getValue("RQly") or 0
+  state.rssi     = getValue("1RSS") or 0
+  state.rxBatt   = getValue("RxBt") or 0
+  state.altitude = getValue("Alt")  or 0
 end
 
-local function drawCell(x, y, w, h, label, value, unit, color)
-  lcd.drawText(x + 4, y + 2, label, SMLSIZE + COLOR_THEME_SECONDARY1)
-  local txt = tostring(value) .. (unit or "")
-  lcd.drawText(x + w - 4, y + h / 2 - 2, txt,
-               MIDSIZE + BOLD + RIGHT + (color or COLOR_THEME_PRIMARY1))
-  lcd.drawRectangle(x, y, w, h, COLOR_THEME_SECONDARY3)
+local function drawCell(x, y, w, h, label, text)
+  lcd.drawText(x + 2, y + 2, label, SMLSIZE)
+  lcd.drawText(x + w - 2, y + h - 10, text, SMLSIZE + BOLD + RIGHT)
+  lcd.drawRectangle(x, y, w, h)
 end
 
-local function run(event, touchState)
+local function run(event)
   -- Cheap rate-limit: only re-read sensors every 100 ms (10 ticks)
   if getTime() - state.lastUpdate > 10 then
     readSensors()
@@ -40,25 +45,18 @@ local function run(event, touchState)
   end
 
   lcd.clear()
+  lcd.drawText(LCD_W / 2, 0, "TELEMETRY", SMLSIZE + INVERS + CENTER)
 
-  -- Title
-  lcd.drawText(LCD_W / 2, 4, "TELEMETRY",
-               MIDSIZE + BOLD + CENTER + COLOR_THEME_PRIMARY1)
+  -- 2x2 grid below the title
+  local top   = 9
+  local cellW = math.floor(LCD_W / 2)
+  local cellH = math.floor((LCD_H - top) / 2)
 
-  -- 2x2 grid below title
-  local top   = 30
-  local cellW = LCD_W / 2
-  local cellH = (LCD_H - top) / 2
-
-  drawCell(0,         top,           cellW, cellH, "RSSI", state.rssi, "dB")
-  drawCell(cellW,     top,           cellW, cellH, "RxBt", state.rxBatt, "V")
-  drawCell(0,         top + cellH,   cellW, cellH, "Alt",  state.altitude, "m")
-  drawCell(cellW,     top + cellH,   cellW, cellH, "Time", math.floor(getTime() / 100), "s")
-
-  -- Exit on RTN key
-  if event == EVT_VIRTUAL_EXIT then
-    return 1
-  end
+  drawCell(0,     top,         cellW, cellH, "RQly", string.format("%d%%", math.floor(state.rqly)))
+  drawCell(cellW, top,         cellW, cellH, "1RSS", string.format("%ddBm", math.floor(state.rssi)))
+  drawCell(0,     top + cellH, cellW, cellH, "RxBt", string.format("%.1fV", state.rxBatt))
+  drawCell(cellW, top + cellH, cellW, cellH, "Alt",  string.format("%dm", math.floor(state.altitude)))
+  return 0
 end
 
 local function background()

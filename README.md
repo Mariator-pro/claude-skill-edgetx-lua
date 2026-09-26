@@ -3,7 +3,7 @@
 A [Claude Code](https://claude.com/claude-code) Skill that turns Claude into a knowledgeable assistant for writing Lua scripts on [EdgeTX](https://edgetx.org/) radios, so you don't have to re-explain the same API details, filename limits, and hardware quirks every time you start a new script.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![EdgeTX](https://img.shields.io/badge/EdgeTX-%E2%89%A5%202.10-brightgreen)](https://edgetx.org)
+[![EdgeTX](https://img.shields.io/badge/EdgeTX-%E2%89%A5%202.11-brightgreen)](https://edgetx.org)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Skill-orange)](https://claude.com/claude-code)
 [![GitHub issues](https://img.shields.io/github/issues/Mariator-pro/claude-skill-edgetx-lua)](../../issues)
 [![GitHub last commit](https://img.shields.io/github/last-commit/Mariator-pro/claude-skill-edgetx-lua)](../../commits/main)
@@ -27,15 +27,15 @@ A Claude Code Skill is a small bundle of documentation that Claude loads automat
 
 - **Script types and lifecycles**: Widget, Telemetry, Mix, Function, and Tool scripts
 - **API reference**: LCD/drawing, input/events/touch, telemetry, `model.*`, file I/O
-- **Hardware specs**: color/touch radios (TX16S Mk I–III, X10, Horus) and compact color (Boxer, Pocket, T-Pro v2)
+- **Hardware specs**: color radios (TX16S Mk I–III, TX15, Horus X10/X12S) and notes on B/W radios (Boxer, Pocket, TX12, T-Pro)
 - **Common pitfalls**: silent-load failures, filename limits, value-range gotchas, the Lua subset's restrictions
-- **Debugging tips**: Companion simulator workflow, `print()` console, `pcall` patterns
+- **Debugging tips**: simulator workflow (VS Code EdgeTX Dev Kit, Companion), `print()` console, `pcall` patterns
 - **Color themes**: `theme.yml` structure, the 13 OS color variables, the authoritative color→UI-element map, and how those slots map to the Lua `COLOR_THEME_*` constants
 - **Templates**: minimal working boilerplates for all five script types, plus a commented `theme.yml`
 
 When you ask Claude something like *"build me a widget that shows RSSI as a bar"* or *"why does my telemetry script not load on the radio?"*, Claude will read the relevant pieces of the skill and answer with EdgeTX-specific knowledge instead of generic Lua advice.
 
-Lua content is verified against the official [EdgeTX Lua Reference Guide](https://luadoc.edgetx.org/); the theme reference is verified against the [EdgeTX themes repo](https://github.com/EdgeTX/themes) (`structure.md`) and the [EdgeTX User Manual](https://manual.edgetx.org/color-radios/radio-settings/themes).
+Lua content is verified against the [EdgeTX source code](https://github.com/EdgeTX/edgetx) (v2.12.4) and, where needed, in the simulator or on a real radio; the official [EdgeTX Lua Reference Guide](https://luadoc.edgetx.org/) serves as a secondary source (it is partly outdated, baseline 2.10). The theme reference is verified against the [EdgeTX themes repo](https://github.com/EdgeTX/themes) (`structure.md`) and the [EdgeTX User Manual](https://manual.edgetx.org/color-radios/radio-settings/themes).
 
 ---
 
@@ -61,6 +61,14 @@ cp -r path/to/this/repo/.claude/skills/edgetx-lua ~/.claude/skills/
 ```
 
 The skill is now available to Claude Code regardless of which directory you start from.
+
+Alternatively, link instead of copying, so a `git pull` in this repo updates the skill everywhere (the repo must then stay where it is):
+
+```bash
+# from the root of this repo
+mkdir -p ~/.claude/skills
+ln -s "$PWD/.claude/skills/edgetx-lua" ~/.claude/skills/edgetx-lua
+```
 
 ---
 

@@ -1,14 +1,16 @@
 ---
 # EdgeTX color theme template.
-# Place this file in /THEMES/<YourThemeName>/theme.yml on the SD card,
-# alongside logo.png + screenshot1..3.png (see themes.md -> Folder structure).
-# The first line MUST be the `---` document marker. Indent with spaces, not tabs.
+# Place this file in /THEMES/<YourThemeName>/theme.yml on the SD card. The radio
+# only needs this file; logo.png + screenshot1..3.png are for the theme selector
+# and the themes repo (see themes.md -> Folder structure).
+# Keep the `---` first line for older EdgeTX versions. Indent with spaces, not tabs.
 
 summary:
   name: My Theme            # shown in the EdgeTX theme selector
   author: Your Name         # shown in the UI
   info: A dark example theme # short, user-visible blurb
-  # description: optional longer text (NOT shown in the UI)
+  # description: optional longer text (NOT read at all)
+  # limits (longer is cut): name 26, author 50, info 255 chars
 
 colors:
   # --- Foregrounds (text / icons) ------------------------------------------

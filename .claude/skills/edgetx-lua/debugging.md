@@ -2,34 +2,43 @@
 
 ## Recommended workflow
 
-1. **Edit on the PC**, run in the **EdgeTX Companion simulator** first.
+1. **Edit on the PC**, run in a **simulator** first (VS Code Dev Kit or Companion, see below).
 2. Only flash to the radio after the script runs cleanly in the simulator for a few minutes.
-3. Keep the previous working version of every file — the simulator + radio combo make "what changed" investigations painful otherwise.
+3. Keep the previous working version of every file: the simulator + radio combo make "what changed" investigations painful otherwise.
 
-## EdgeTX Companion simulator
+## Simulators
 
-EdgeTX Companion ships with a simulator (`File → Simulate`) that emulates the radio. It supports:
-- All script types
-- A virtual SD card (point it at a real folder on the PC)
-- Stick/switch/pot input via the GUI or mapped USB controllers
-- A console window that captures `print()` output and Lua errors with stack traces
+### VS Code: EdgeTX Dev Kit (preferred)
 
-Workflow:
-1. Set the simulator's SD card path to your dev folder (so file edits are picked up without copying).
-2. Place your script in the matching folder (e.g. `WIDGETS/MyWidget/main.lua`).
-3. Open the simulator, switch to the appropriate view (Main, Telemetry, Tools).
-4. Watch the console for `print()` output and tracebacks.
-5. Edit → save → simulator picks up the change on next script reload (some script types need exiting and re-entering the page).
+The VS Code extension *EdgeTX Dev Kit* (`jeffreychix.edgetx-dev-kit`, checked with 2.2.2) runs the real EdgeTX firmware compiled to WebAssembly inside VS Code, plus Lua IntelliSense and lint.
+- **SD card** = the folder in the setting `edgetx.sdCardPath` (point it at the project's `src/`); radio profile via `.vscode/edgetx.json` / *EdgeTX: Set Radio Profile*.
+- **`---@type` annotation** at the top of the file tells the extension the script type: `WidgetScript`, `TelemetryScript`, `FunctionScript`, `MixScript`, `OneTimeScript`.
+- **Simulate Script** (right-click / command palette) launches only **widgets** (full main area) and telemetry scripts directly. The documented `---@simulate Layout2x2 zone=1` annotation was **ignored** in a test with 2.2.2 (the widget still ran full size); to test a small zone, set up the layout in the simulator by hand and assign the widget there. Tools are started from the simulator's TOOLS menu.
+- **Watch Script** reloads on every save.
+- **Logs** pane shows `print()` output and errors; **Telemetry** pane injects fake sensor values.
+- Its lint still enforces the old 10-char / no-space limits for widget and option names; those are 2.10 rules (see `script-types.md` → Widget option limits).
 
-## `print()` — your primary debugger
+### EdgeTX Companion simulator
 
-`print(...)` writes to the EdgeTX log:
-- In the simulator: appears in the Console pane.
-- On the radio: written to `/LOGS/console.log` (newer EdgeTX) or visible in `dmesg` over USB on some builds. **Not visible on the radio screen.**
+EdgeTX Companion ships a simulator (`File → Simulate`) with a virtual SD card (point it at a real folder), stick/switch input via the GUI, and a console for `print()` output and Lua errors. Place the script in the matching folder, open the view it belongs to (main view for widgets, TOOLS for tools), edit → save → reload the script (some types need leaving and re-entering the page). Simulating a color radio means no telemetry scripts (B/W only).
+
+## `print()`: your primary debugger
+
+`print(...)` goes to EdgeTX's debug output (`thirdparty/Lua/src/luaconf.h`, `debug.h`, v2.12.4):
+- In the simulator: appears in the console / log pane (confirmed in the TX16S MK3 simulator: Logs pane).
+- On the radio: **nothing at all** in normal (release) firmware. Only a DEBUG firmware sends it to the serial debug port. There is no `/LOGS/console.log`.
+
+On the radio, use an on-screen overlay (below) or append to your own log file, sparingly (SD writes block the UI):
+```lua
+local function log(msg)
+  local f = io.open("/SCRIPTS/MYAPP/debug.log", "a")
+  if f then io.write(f, string.format("%d %s\n", getTime(), msg)); io.close(f) end
+end
+```
 
 Tips:
-- `print(string.format("v=%d t=%d", val, getTime()))` — printf-style is far more useful than concatenation.
-- Prefix log lines with your script name: `print("[mywidget] ...")` — many scripts share the same log.
+- `print(string.format("v=%d t=%d", val, getTime()))`: printf-style is far more useful than concatenation.
+- Prefix log lines with your script name: `print("[mywidget] ...")`; many scripts share the same log.
 - Rate-limit prints: do not `print` every frame. Use a counter or only print on state changes.
 
 ## On-screen debug overlay
@@ -62,18 +71,19 @@ if not ok then
 end
 ```
 
-`xpcall` with a handler that captures `debug.traceback` would be ideal, but `debug` is not exposed — so you only get the error message, not a stack trace, on the radio. The simulator does print full tracebacks.
+`xpcall` with a handler that captures `debug.traceback` would be ideal, but `debug` is not exposed: so you only get the error message, not a stack trace, on the radio. The simulator does print full tracebacks.
 
 ## Reproducing on the simulator vs the radio
 
 When something works in the sim but not on the radio:
-- Check `LCD_W` / `LCD_H` — the simulator defaults to whatever radio profile you picked.
+- Check `LCD_W` / `LCD_H`: the simulator defaults to whatever radio profile you picked.
 - Check timing: the simulator runs faster than the radio's CPU; a `getTime()`-based timeout might fire differently.
-- Check file paths: the simulator is more permissive about casing on macOS/Linux (depending on filesystem).
-- Check telemetry: there is no real telemetry in the simulator unless you enable simulated telemetry — `getValue("RSSI")` will be `0`.
+- Check telemetry: the simulator has no real telemetry; sensors read `0` (e.g. ELRS `RQly`, `1RSS`) until you feed values (Dev Kit: Telemetry pane).
 
 When something works on the radio but not in the sim:
 - Touch events behave subtly differently; the sim emulates touch with the mouse.
+- File system: the Dev Kit simulator uses the host file system, so `io.open "w"` does not truncate, `rename` overwrites and `mkdir` never fails there, unlike the radio (see `api-reference.md` → Filesystem functions). Verify file logic on the radio.
+- File paths: the radio matches case-insensitively, a simulator on a case-sensitive host (Linux) does not, so a wrongly cased path can fail only in the sim.
 - Bitmap rendering on the sim can be slightly different (scaling / alpha).
 
 ## Useful one-liners

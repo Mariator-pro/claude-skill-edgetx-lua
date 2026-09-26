@@ -13,3 +13,6 @@
 
 # Local copy of the official EdgeTX Lua reference (used to verify the skill)
 lua-reference-guide/
+
+# Claude Code working notes (research procedure)
+CLAUDE.md
