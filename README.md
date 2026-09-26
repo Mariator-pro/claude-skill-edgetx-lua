@@ -31,6 +31,7 @@ A Claude Code Skill is a small bundle of documentation that Claude loads automat
 - **Common pitfalls**: silent-load failures, filename limits, value-range gotchas, the Lua subset's restrictions
 - **Debugging tips**: simulator workflow (VS Code EdgeTX Dev Kit, Companion), `print()` console, `pcall` patterns
 - **Color themes**: `theme.yml` structure, the 13 OS color variables, the authoritative color→UI-element map, and how those slots map to the Lua `COLOR_THEME_*` constants
+- **Patterns**: canonical, source-verified building blocks that recur across projects (e.g. link detection for every telemetry system)
 - **Templates**: minimal working boilerplates for all five script types, plus a commented `theme.yml`
 
 When you ask Claude something like *"build me a widget that shows RSSI as a bar"* or *"why does my telemetry script not load on the radio?"*, Claude will read the relevant pieces of the skill and answer with EdgeTX-specific knowledge instead of generic Lua advice.

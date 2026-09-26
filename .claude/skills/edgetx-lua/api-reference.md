@@ -123,7 +123,7 @@ Widgets don't need it: EdgeTX clips every widget's drawing to its own zone autom
 ## 2. Input / Values
 
 ### `getValue(source)`
-Returns the current value of any radio source. Returns `0` for non-existing sources, unavailable telemetry, **or sensors restricted in FAI mode**.
+Returns the current value of any radio source. Returns `0` for non-existing sources, unavailable telemetry, **or sensors restricted in FAI mode** (all units except volts and dB; see `pitfalls.md` → FAI mode hides sensors).
 ```lua
 local thr = getValue("thr")           -- by name
 local sa  = getValue("sa")            -- switch SA position: -1024 / 0 / 1024
@@ -180,7 +180,11 @@ local info = getFieldInfo("thr")
 Use `id` for repeated `getValue` calls in hot paths.
 
 ### `getRSSI()` → rssi, alarmLow, alarmCrit
-Returns **three** values: the RSSI (`0` when no link), the configured low alarm level and the configured critical alarm level (`api_general.cpp`, v2.12.4; confirmed in the TX16S MK3 simulator). This is the FrSky-style RSSI; with ELRS/CRSF read the sensors (`1RSS`, `RQly`) instead.
+Returns **three** values: the RSSI (`0` when no link), the configured low alarm level and the configured critical alarm level (`api_general.cpp`, v2.12.4; confirmed in the TX16S MK3 simulator). The first value is `min(99, TELEMETRY_RSSI())` while telemetry is streaming, else `0` (`api_general.cpp`, v2.12.4).
+
+With ELRS/CRSF it is **not a dBm value but the averaged link quality (RQly, 1..99)**: the CRSF link-statistics frame stores RQly as the radio's RSSI. RQly > 0 keeps telemetry marked as streaming for 1 s; RQly == 0 ends streaming at once (`telemetry/crossfire.cpp`, v2.12.4). For signal strength read `1RSS`/`2RSS`.
+
+As a "link up?" check, `getRSSI() ~= 0` works with every telemetry system (all protocols set the value and the streaming flag) and does not depend on a sensor name. `getValue(<telemetry sensor>)` returns 0 and `getSourceValue` returns `isCurrent == false` on exactly the same condition (no streaming): all three key off the same flag, which drops 1 s after the last link frame (`TELEMETRY_TIMEOUT10ms`, `telemetry/telemetry.cpp`, v2.12.4). Ready-made implementation with grace period, per-system edge cases and test stub: `patterns.md` → Link detection.
 
 ### Time
 ```lua

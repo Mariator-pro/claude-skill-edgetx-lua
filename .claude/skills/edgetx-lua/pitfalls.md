@@ -26,7 +26,14 @@ These will make your script seem to "not exist" without any error:
 
 ## FAI mode hides sensors
 
-When the user enables FAI mode (competition rule compliance), non-allowed telemetry sensors return `0` from `getValue` and **no value** from `getSourceValue`, regardless of the real value (`api_general.cpp`, v2.12.4). `getGeneralSettings()` has **no FAI field**. A sensor that exists (`getFieldInfo`) but yields no value from `getSourceValue` is either blocked by FAI or has never been received.
+When FAI mode (competition rule compliance) is active, every telemetry sensor whose unit is **not volts or dB** is blocked: `getValue` returns `0` and `getSourceValue` returns **no value**, regardless of the real value, while `getFieldInfo` still finds the sensor (block in `getValue`, `mixer.cpp` via `IS_FAI_FORBIDDEN`; allowed units in `isFaiForbidden`, `telemetry/telemetry_sensors.cpp`; `getSourceValue` passes the invalid flag on, `api_general.cpp`; v2.12.4).
+
+- **What stays readable:** sensors in volts (e.g. `RxBt`) and dB (e.g. ELRS `RSNR`). ELRS `1RSS`/`2RSS` are **dBm**, not dB, so they are blocked, as are `RQly` (%) and `RFMD` (raw). `getRSSI()` is not affected, it does not read a sensor (`luaGetRSSI`, `api_general.cpp`).
+- **Trap:** a script that treats a blocked sensor as a real 0 misreads it (0 dBm looks like a perfect signal) and fails silently, since the sensor exists and the link is up.
+- **When it can be active:** FAI is a firmware build option, off by default (`option(FAI ... OFF)`, `radio/src/CMakeLists.txt`). The build tools offer it for most radios, color radios included (TX16S, T16, T18, X10, X12S), as `faimode` (`FAI=YES`, always on) and `faichoice` (`FAI=CHOICE`, a radio setting stored as `fai` in `radio.yml`) (`radio/util/fwoptions.py`, v2.12.4). The radio setup screen offers the `faichoice` toggle only on B/W radios (`gui/128x64`, `gui/212x64`); the color UI has none (`gui/colorlcd`), so there it can only be set outside the radio UI (`radio.yml`, likely also Companion). The firmware's "options" list names it (`FAImode` / `FAIchoice`, `options.h`). A standard download without these options never has FAI active.
+- The OpenTX build-option docs describe `faimode` as "disables all telemetry except for RSSI and voltage", which matches the unit rule above: the FrSky `RSSI` sensor is in dB. With ELRS, "RSSI" means `1RSS`/`2RSS` in dBm and is therefore **not** kept ([OpenTX 2.2 manual, Build Options](https://doc.open-tx.org/manual-for-opentx-2-2/radio_options)). The EdgeTX Lua reference only says "non allowed sensors" (`getValue`, `getSourceValue`).
+- Verified identical in v2.11.0 and v2.12.4.
+- `getGeneralSettings()` has **no FAI field**. A sensor that exists (`getFieldInfo`) but yields no value from `getSourceValue` is either blocked by FAI or has never been received.
 
 ## Lua language subset
 
@@ -101,7 +108,7 @@ What is **NOT** available: do not even try:
   ```lua
   local function sensorExists(name) return getFieldInfo(name) ~= nil end
   ```
-  A sensor appears only after telemetry discovery, so it can show up after the script started: re-check periodically (e.g. once per second) instead of once at load, and cache the result between checks rather than calling it every frame.
+  A sensor appears only after telemetry discovery, so it can show up after the script started: re-check periodically (e.g. once per second) instead of once at load, and cache the result between checks rather than calling it every frame. Ready-made: `patterns.md` → Sensor existence (throttled).
 - **Switch values are tri-state integers**: `-1024 / 0 / +1024` for SA/SB/SC (3-position), `-1024 / +1024` for 2-position. Don't compare to `1` or `true`.
 - **Logical switches** (`ls1`...) return `-1024` (off) / `+1024` (on), not 0/1 (`mixer.cpp`, v2.12.4; confirmed in the TX16S MK3 simulator). Test with `> 0` or use `getLogicalSwitchValue(n)`.
 - **Sensor names with `+` / `-` suffixes** (`Alt+`, `Cels-`) give max/min recorded values; the bare name gives the live value.
