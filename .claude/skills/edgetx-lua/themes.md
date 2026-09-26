@@ -4,7 +4,7 @@ How to create and edit **color themes** for color-display EdgeTX radios. A theme
 
 > **A theme is NOT a Lua script.** Themes are plain data: a folder under `/THEMES/` with a `theme.yml` file plus images. There is no Lua code involved. The connection to Lua scripting is that the same color slots are exposed to scripts as the `COLOR_THEME_*` constants (see [§7](#7-relationship-to-lua-color_theme_-constants)): so a script that draws with theme colors automatically follows whatever theme the user picked.
 
-**Source of truth:** the official EdgeTX themes repo, `structure.md` and the `example/` theme: <https://github.com/EdgeTX/themes>. In-radio editor docs: <https://manual.edgetx.org/color-radios/radio-settings/themes>. File format, color names, limits and file lookup were checked against the EdgeTX source (`gui/colorlcd/themes/theme_manager.cpp`, v2.12.4); the UI-element map in §4 comes from `structure.md`. On conflicts the source code wins (see `SKILL.md` → Source of truth).
+**Source of truth:** the EdgeTX source code, v2.12.4. File format, color names, limits and file lookup: `gui/colorlcd/themes/theme_manager.cpp`. The color → UI-element map in §4: the LVGL styles under `radio/src/gui/colorlcd/`, confirmed in the TX16S MK3 simulator with a diagnostic theme (see [§9](#9-verifying-the-map-diagnostic-theme)). Folder layout and required files: the official themes repo (`structure.md`, <https://github.com/EdgeTX/themes>). Its color assignment list is **outdated and partly wrong**; do not use it. In-radio editor docs: <https://manual.edgetx.org/color-radios/radio-settings/themes>. On conflicts the source code wins (see `SKILL.md` → Source of truth).
 
 ---
 
@@ -82,119 +82,144 @@ Colors are 24-bit RGB, `0xRRGGBB`, each component `00`–`FF`.
 
 ## 3. The 13 color variables
 
-| Variable     | Since   | Role (short)                              |
-| ------------ | ------- | ----------------------------------------- |
-| `PRIMARY1`   | -       | Foreground text on dark/default surfaces  |
-| `PRIMARY2`   | -       | Bars/icons foreground + editable-field bg |
-| `PRIMARY3`   | -       | Secondary/inactive foreground accents     |
-| `SECONDARY1` | -       | Bar backgrounds + slider/trim paths       |
-| `SECONDARY2` | -       | Label / button backgrounds                |
-| `SECONDARY3` | -       | Main screen + popup background            |
-| `FOCUS`      | -       | Highlight for the focused/selected item   |
-| `EDIT`       | -       | Field background while actively editing   |
-| `ACTIVE`     | -       | "On/active" state background              |
-| `WARNING`    | -       | Warning text color                        |
-| `DISABLED`   | -       | Greyed-out / disabled elements            |
-| `QM_BG`      | 2.12+   | Quick Menu background                     |
-| `QM_FG`      | 2.12+   | Quick Menu foreground                     |
+Short roles, derived from the source map in [§4](#4-color--ui-element-map-source-verified):
+
+| Variable     | Since   | Role (short)                                                             |
+| ------------ | ------- | ------------------------------------------------------------------------ |
+| `PRIMARY1`   | -       | Label text; list item text; text on ACTIVE (checked) buttons              |
+| `PRIMARY2`   | -       | **Control background** (buttons, fields, list items); text on bars and on FOCUS/EDIT fills |
+| `PRIMARY3`   | -       | Inactive parts of TopBar status icons (RSSI bars, USB, GPS)               |
+| `SECONDARY1` | -       | TopBar/header/footer background; **control text**; slider/trim paths; toggle knob |
+| `SECONDARY2` | -       | Control borders; list separators                                         |
+| `SECONDARY3` | -       | Page, dialog, popup and keyboard background                              |
+| `FOCUS`      | -       | Focus **border/outline** of controls; **fill** of the selected list entry; logo background; slider knob |
+| `EDIT`       | -       | Field background while editing                                           |
+| `ACTIVE`     | -       | Checked/on state background (buttons, toggles, keyboard keys)            |
+| `WARNING`    | -       | Warning text and icons; **also a fill** (full-screen alert, timer widget) |
+| `DISABLED`   | -       | Only a few specific texts (see §4); **not** used for disabled controls    |
+| `QM_BG`      | 2.12+   | Quick Menu background                                                    |
+| `QM_FG`      | 2.12+   | Quick Menu foreground                                                    |
 
 Targeting a radio on 2.11 or earlier? `QM_BG`/`QM_FG` are simply ignored: but include them anyway for forward compatibility.
 
 ---
 
-## 4. Color → UI element map (authoritative)
+## 4. Color → UI element map (source-verified)
 
-This is the exact mapping from `structure.md`. Use it to reason about contrast (which slot is a background, which is the text drawn on top of it).
+> **`structure.md` in the themes repo is wrong in several places.** It says buttons use `SECONDARY2` background with `PRIMARY1` text, that `FOCUS` fills focused fields, that `DISABLED` colors disabled elements and that `PRIMARY3` is the scroll marker. The EdgeTX source (v2.12.4) and the simulator show otherwise. This section follows the source; do not copy `structure.md` back in.
 
-```
-PRIMARY1
-  Label text
-  Button text (not focused)
+Markers: **[src]** = read in the EdgeTX source, v2.12.4 (paths under `radio/src/gui/colorlcd/`). **[sim]** = additionally confirmed in the TX16S MK3 simulator with the diagnostic theme from [§9](#9-verifying-the-map-diagnostic-theme).
 
-PRIMARY2
-  ETX Logo icon
-  TopBar icons
-  TopBar text
-  TopBar tab name text
-  BottomBar text
-  Editable field background
-  Editable field text (editing)
-  Button text (focused)
-  PopUp selectable field background
-  Trim knob
-  Slider knob
+### Controls (buttons, text/number fields, choice fields, toggles)
 
-PRIMARY3
-  Scroll marker
-  Inactive part of TopBar icons
+All standard controls share `etx_std_ctrl_colors()` / `etx_std_settings()` (`libui/etx_lv_theme.cpp:571-595`).
 
-SECONDARY1
-  TopBar background
-  BottomBar background
-  Trim knob path
-  Trim knob shadow
-  Slider path
-  Slider knob shadow
+| State        | Background   | Text         | Border/outline | Notes |
+| ------------ | ------------ | ------------ | -------------- | ----- |
+| Normal       | `PRIMARY2`   | `SECONDARY1` | `SECONDARY2`   | [src] [sim] |
+| Focused      | `PRIMARY2` (unchanged) | `SECONDARY1` | `FOCUS` (border + outline) | FOCUS does **not** fill the control. [src] [sim] |
+| Checked / on | `ACTIVE`     | `PRIMARY1`   | `SECONDARY2`   | Active buttons, toggles in on state. [src] [sim] |
+| Editing      | `EDIT`       | `PRIMARY2`   |                | Text areas (`etx_lv_theme.cpp:666-668`). [src] [sim] |
+| Disabled     | grey filter  | grey filter  |                | 50 % mix with a fixed light grey (`lv_palette_lighten(LV_PALETTE_GREY, 2)`), **not** `DISABLED` (`etx_lv_theme.cpp:203-217, 593`). [src] |
+| Pressed      | darkened     | darkened     |                | Dark color filter (`styles->pressed`). [src] |
 
-SECONDARY2
-  Label background
-  Button background
+Toggle switch: track follows the table above (`PRIMARY2` off, `ACTIVE` on), knob is `SECONDARY1` (`libui/toggleswitch.cpp:46`). [src] [sim]
 
-SECONDARY3
-  Main screen background
-  PopUp background
+### Lists and tables (menus, choice popups, theme color list)
 
-FOCUS
-  ETX Logo background
-  TopBar icon background (selected)
-  Label background (focused)
-  Editable field background (focused)
-  Trim knob
-  Slider knob
+`libui/table.cpp:40-47`:
 
-EDIT
-  Editable field background (editing)
+| Part             | Background | Text       | Notes |
+| ---------------- | ---------- | ---------- | ----- |
+| Item             | `PRIMARY2` | `PRIMARY1` | Separators `SECONDARY2`. [src] [sim] |
+| Selected item    | `FOCUS`    | `PRIMARY2` | Measured slightly darker in the simulator (pressed filter). [src] [sim] |
 
-ACTIVE
-  Button background (active)
-  Editable field background (variable active)
+### Bars, pages, dialogs
 
-WARNING
-  Label text (warning)
+| Element                                  | Colors | Source |
+| ---------------------------------------- | ------ | ------ |
+| Page/dialog/popup body                   | `SECONDARY3` background (default of `etx_solid_bg()`, `libui/etx_lv_theme.h:155-157`) | [src] [sim] |
+| TopBar, page header, dialog/menu header  | `SECONDARY1` background, `PRIMARY2` text/icons (`mainview/topbar.cpp:142`, `setup_menus/pagegroup.cpp:112-127`, `libui/dialog.cpp:56-57`, `libui/menu.cpp:318-319`) | [src] [sim] |
+| Page icon / ETX logo tab                 | `FOCUS` background, `PRIMARY2` icon (`setup_menus/pagegroup.cpp:62-80`) | [src] [sim] |
+| Footer (e.g. LS monitor)                 | `SECONDARY1` background, `PRIMARY2` text | [sim] |
+| Label (`StaticText` default)             | `PRIMARY1` text, no own background (`libui/static.h:33`) | [src] [sim] |
+| Scrollbar                                | fixed `COLOR_GREY`, not a theme slot (`etx_lv_theme.cpp:640-644`) | [src] |
+| On-screen keyboard                       | `SECONDARY3` background; keys `PRIMARY2`/`PRIMARY1`, checked `ACTIVE`, selected `FOCUS` with `PRIMARY2` text (`libui/keyboard_base.cpp:27-42`) | [src] |
 
-DISABLED
-  Disabled elements
-```
+### Full-screen dialogs (`libui/fullscreen_dialog.cpp`)
 
-```
-QM_BG          Quick Menu background          (2.12+)
-QM_FG          Quick Menu foreground          (2.12+)
-```
+| Part                    | Confirm/info type | Alert type (switch/throttle warning) |
+| ----------------------- | ----------------- | ------------------------------------ |
+| Background (top/bottom strips) | `SECONDARY1` [src] [sim] | **`WARNING`** (line 43) [src] [sim] |
+| Middle band             | `PRIMARY2` (line 59) [src] [sim] | `PRIMARY2` [src] [sim] |
+| Title and warning icon  | `WARNING` on `PRIMARY2` (lines 64, 81) [src] [sim] | same [src] [sim] |
+| Message (e.g. switch list `SA↑`) | `PRIMARY1` bold on `PRIMARY2` (line 88) [src] | same [src] [sim] |
+| Buttons                 | `SECONDARY3` background, `PRIMARY1` text, `FOCUS` border when focused (lines 97-116) [src] [sim] | same [src] [sim] |
+
+Alert type is used by the switch and throttle warnings (`controls/switch_warn_dialog.cpp:27, 94`).
+
+### Main view
+
+| Element                 | Colors | Source |
+| ----------------------- | ------ | ------ |
+| Main screen background  | `background_<W>x<H>.png` if present, else `SECONDARY3` | [sim] |
+| Slider                  | path `SECONDARY1`, knob `FOCUS`, knob shadow `PRIMARY1` (`mainview/sliders.cpp:37-57`) | [src] [sim] |
+| Trim                    | bar `SECONDARY1`, value text `PRIMARY2` on `SECONDARY1` (`mainview/trims.cpp:100-120`) | [src] |
+| Radio Info widget       | inactive icon parts `PRIMARY3` (`widgets/radio_info.cpp`) | [src] |
+| Timer widget            | background `WARNING` when elapsed (`widgets/timer.cpp:44, 181`) | [src] |
+
+### Where `WARNING` is used
+
+Text: warning labels (e.g. `radio/hw_serial.cpp:68`, `module/custom_failsafe.cpp:46`, `module/module_setup.cpp:214`), stale telemetry values (`model/model_telemetry.cpp:181, 407`). **Fill:** full-screen alert, elapsed timer widget, USB joystick collision (`model/model_usbjoystick.cpp:354`). [src]
+
+### Where `DISABLED` is used (complete list, v2.12.4)
+
+| Place | Source |
+| ----- | ------ |
+| LS monitor: numbers of unused logical switches, drawn on `SECONDARY3` | `mainview/view_logical_switches.cpp:290` [src] [sim] |
+| Value widget: label and value while telemetry is stale | `widgets/value.cpp:57, 69` [src] |
+| Model templates: info text | `model/model_templates.cpp:57` [src] |
+| USB joystick: bar of channels used elsewhere | `model/model_usbjoystick.cpp:106` [src] |
+| Mic recorder: cut shade | `radio/radio_mic_recorder.cpp:118` [src] |
+| Theme editor preview: "Disabled" sample label | `radio/preview_window.cpp:162` [src] [sim] |
+
+### Quick Menu (2.12+)
+
+`QM_BG` background, `QM_FG` icons/text/separator; the focused entry swaps them (`QM_FG` background, `QM_BG` icon and text). Disabled entries mix `QM_FG` in at 60 % (`setup_menus/quick_menu_group.cpp:33-37, 69-121`, `libui/etx_lv_theme.cpp:220-234`). [src] [sim, theme editor preview only]
 
 ---
 
 ## 5. Contrast pairs that must stay legible
 
-A theme breaks visually when a foreground slot has too little contrast with the background it lands on. The map above produces these **must-be-readable** pairings: check each one:
+Derived from §4. Check each pair (WCAG contrast ratio; the EdgeTX UI font is large, so about 3:1 is readable, 4.5:1 is comfortable):
 
-| Foreground            | Background          | Where it shows                         |
-| --------------------- | ------------------- | -------------------------------------- |
-| `PRIMARY1`            | `SECONDARY3`        | Label text on main screen / popups     |
-| `PRIMARY1`            | `SECONDARY2`        | Button text (not focused) on buttons   |
-| `PRIMARY2`            | `SECONDARY1`        | TopBar/BottomBar text & icons on bars  |
-| `PRIMARY1` (text)     | `FOCUS`             | Focused label / focused editable field |
-| `PRIMARY2` (text)     | `EDIT`              | Field text while editing               |
-| `WARNING`             | `SECONDARY2`/`SECONDARY3` | Warning labels                   |
-| `PRIMARY3`            | `SECONDARY1`        | Inactive TopBar icon parts             |
-| `QM_FG`               | `QM_BG`             | Quick Menu (2.12+)                     |
+| Foreground   | Background   | Where it shows                                   |
+| ------------ | ------------ | ------------------------------------------------ |
+| `SECONDARY1` | `PRIMARY2`   | Text on every button and field                   |
+| `PRIMARY1`   | `PRIMARY2`   | List/menu items                                  |
+| `PRIMARY1`   | `SECONDARY3` | Labels on pages and popups                       |
+| `PRIMARY2`   | `SECONDARY1` | TopBar, page headers, dialog headers, footers    |
+| `PRIMARY2`   | `FOCUS`      | Selected list entry; page icon / logo            |
+| `PRIMARY2`   | `EDIT`       | Field while editing                              |
+| `PRIMARY1`   | `ACTIVE`     | Checked buttons, toggles on                      |
+| `FOCUS`      | `PRIMARY2` and `SECONDARY3` | Focus border must be visible around controls and tiles |
+| `WARNING`    | `SECONDARY3` | Warning labels on pages                          |
+| `WARNING`    | `PRIMARY2`   | Title/icon of full-screen dialogs                |
+| `SECONDARY3` (button) | `WARNING` | Full-screen alert: only the button sits on the WARNING strips, no text |
+| `PRIMARY1`   | `PRIMARY2`   | Message text of full-screen dialogs (e.g. switch warning) |
+| `PRIMARY1`   | `SECONDARY3` | Full-screen dialog buttons                       |
+| `DISABLED`   | `SECONDARY3` | LS monitor (unused switches)                     |
+| `DISABLED`   | main-screen background | Value widget with stale telemetry      |
+| `PRIMARY3`   | `SECONDARY1` | Inactive TopBar icon parts                       |
+| `QM_FG`      | `QM_BG`      | Quick Menu (2.12+)                               |
 
 Practical rules of thumb:
-- **`PRIMARY*` are foregrounds, `SECONDARY*` are backgrounds.** Keep the two groups on opposite ends of the brightness range (light text + dark surfaces, or vice-versa).
-- **`PRIMARY2` has a dual role**: it's a foreground (logo/bar icons & text) *and* the editable-field background. Pick it so it both contrasts against `SECONDARY1` (bars) and works as a field fill; in practice it's the dark base color, often equal to `SECONDARY3`.
-- `FOCUS`, `EDIT`, `ACTIVE` are highlight backgrounds: make them clearly distinct from `SECONDARY2`/`SECONDARY3` *and* still readable under `PRIMARY1`/`PRIMARY2` text.
-- `WARNING` is text-only: pick something that pops against the label/screen backgrounds (typically red).
-- `DISABLED` should read as "muted": a mid-grey between fg and bg.
-- It's common and fine to set `SECONDARY3 == PRIMARY2` (the dark base color used both as screen bg and as bar/icon foreground), as the stock themes do.
+- **`PRIMARY2` is the control surface.** Buttons, fields and list items are filled with it, and it is also the text color on bars, FOCUS and EDIT. A dark `PRIMARY2` therefore needs light `SECONDARY1`/`PRIMARY1` text and light-to-mid `SECONDARY1`/`FOCUS`/`EDIT` fills.
+- **`SECONDARY1` has a dual role**: bar background *and* control text. It must contrast with both `PRIMARY2` (as text) and carry `PRIMARY2` text on bars.
+- **Focus is mostly a border.** On controls it is only an outline, so `FOCUS` must stand out against `PRIMARY2` *and* against `SECONDARY3` (tiles, grid items). Only the selected list entry is filled.
+- **`WARNING` must work as text and as a fill.** Check it as text on `SECONDARY3` and `PRIMARY2`; as a fill it frames the alert screen, where the `SECONDARY3` button must still stand out from it.
+- **`DISABLED` is text on `SECONDARY3`** in the LS monitor: a mid tone that is visible there but clearly weaker than `PRIMARY1`.
+- If `SECONDARY3 == PRIMARY2`, controls separate from the page only by their `SECONDARY2` border (follows from §4).
 
 ---
 
@@ -248,7 +273,49 @@ These are **indexed** colors: change the theme and every script using them re-co
 - **YAML indentation matters**: use spaces, not tabs; `name`/`author`/`info` are nested under `summary:`, the colors under `colors:`.
 - **`description:` is not shown in the UI**: use `info:` for the user-visible blurb.
 - **RGB565 truncation** (see [§2](#2-themeyml-format)): design with real radio rendering in mind, not pixel-perfect 24-bit.
-- **Don't make `DISABLED` equal to `PRIMARY1`**: disabled items would look enabled.
-- **WARNING is text-only.** Setting it to a background-like color does nothing useful; it never paints a fill.
+- **`DISABLED` does not grey out disabled controls.** Disabled buttons, toggles and sliders get a fixed grey filter; `DISABLED` only colors the few texts listed in §4. Check it where it actually appears: the LS monitor (on `SECONDARY3`).
+- **Don't make `DISABLED` equal to `PRIMARY1`**: unused switches in the LS monitor would look like defined ones.
+- **`WARNING` is also a fill**: the full-screen alert (switch/throttle warning) and the elapsed timer widget paint their background with it. Pick a color that works as text *and* as a background.
 - **Test on the actual display family.** A theme tuned on a bright 800×480 panel can look washed-out or muddy on a dimmer 480×272 unit.
 - Editing a theme **in the radio editor overwrites its `theme.yml`**: keep a backup if you hand-tuned the file.
+
+---
+
+## 9. Verifying the map (diagnostic theme)
+
+To check which slot paints what, give every slot its own signal color and look at the screens. This is how §4 was confirmed (TX16S MK3 simulator, 2026-09-26):
+
+```yml
+---
+summary:
+  name: Color Test
+  author: -
+  info: Diagnostic theme, every slot has its own signal color
+colors:
+  PRIMARY1:   0xFF0000   # red
+  PRIMARY2:   0x0000FF   # blue
+  PRIMARY3:   0xFF00FF   # magenta
+  SECONDARY1: 0xFFFF00   # yellow
+  SECONDARY2: 0x00FFFF   # cyan
+  SECONDARY3: 0x804000   # brown
+  FOCUS:      0x00FF00   # green
+  EDIT:       0xFF8000   # orange
+  ACTIVE:     0x8000FF   # purple
+  WARNING:    0x008080   # teal
+  DISABLED:   0xFFC0C0   # pink
+  QM_BG:      0x404000   # olive
+  QM_FG:      0xC0FFC0   # mint
+```
+
+Leave out the background images so the main screen shows `SECONDARY3`. Read the colors from screenshots by pixel value, not by eye; RGB565 turns `0xFFFF00` into `0xF8FC00`, and pressed/selected items are drawn slightly darker.
+
+| Screen | Confirms |
+| ------ | -------- |
+| Radio Setup → Themes → Edit theme (preview) | Controls normal/focused/checked/editing, toggles, labels, TopBar, sliders, Quick Menu. The preview uses real `TextButton`/`TextEdit`/`ToggleSwitch` controls (`radio/preview_window.cpp:152-165`), but its "Disabled" label is hard-coded to `DISABLED`, so it proves nothing about disabled controls. |
+| Theme editor color list, or any choice popup | List items and the selected entry |
+| Quick Menu → Tools → LS Monitor (model without logical switches) | `DISABLED` on `SECONDARY3` |
+| Model select with a model still connected ("Model still powered") | Full-screen dialog, confirm type |
+| Switch SA away from its warning position, restart the simulator ("CONTROL WARNING") | Full-screen dialog, alert type with `WARNING` background |
+
+Not yet confirmed in the simulator (source only): the grey filter on disabled controls, keyboard and trim colors, the timer widget fill.
+

@@ -13,22 +13,23 @@ summary:
   # limits (longer is cut): name 26, author 50, info 255 chars
 
 colors:
-  # --- Foregrounds (text / icons) ------------------------------------------
-  PRIMARY1:   0xF8FCF8   # Label text; button text (not focused)
-  PRIMARY2:   0x081828   # Bar text & icons; editable-field bg; focused button text
-  PRIMARY3:   0x385C68   # Scroll marker; inactive TopBar icon parts
+  # Roles follow themes.md section 4 (EdgeTX source v2.12.4, simulator-confirmed).
+  # --- Text / control surface -----------------------------------------------
+  PRIMARY1:   0xF8FCF8   # Label text; list item text; text on ACTIVE buttons
+  PRIMARY2:   0x081828   # Control bg (buttons, fields, list items); text on bars, FOCUS, EDIT
+  PRIMARY3:   0x385C68   # Inactive parts of TopBar status icons
 
-  # --- Backgrounds / surfaces ----------------------------------------------
-  SECONDARY1: 0x507C90   # TopBar/BottomBar bg; slider & trim paths/shadows
-  SECONDARY2: 0x507C90   # Label bg; button bg
-  SECONDARY3: 0x081828   # Main screen bg; popup bg
+  # --- Bars / borders / pages -------------------------------------------------
+  SECONDARY1: 0x507C90   # TopBar/header bg; control text; slider & trim paths; toggle knob
+  SECONDARY2: 0x507C90   # Control borders; list separators
+  SECONDARY3: 0x081828   # Page, dialog, popup and keyboard bg
 
   # --- State highlights -----------------------------------------------------
-  FOCUS:      0xA0C4D0   # Focused/selected item bg; logo bg; selected icon bg
-  EDIT:       0xE8F8A8   # Editable-field bg while editing
-  ACTIVE:     0x604060   # "On/active" button & variable-field bg
-  WARNING:    0xE00000   # Warning text (text-only; never paints a fill)
-  DISABLED:   0x687888   # Greyed-out / disabled elements
+  FOCUS:      0xA0C4D0   # Focus border of controls; fill of selected list entry; logo bg
+  EDIT:       0xE8F8A8   # Field bg while editing
+  ACTIVE:     0x604060   # Checked/on bg (buttons, toggles)
+  WARNING:    0xE00000   # Warning text/icons; also bg of full-screen alerts and elapsed timers
+  DISABLED:   0x687888   # LS monitor unused switches, stale telemetry text (not disabled controls)
 
   # --- Quick Menu (EdgeTX 2.12+; ignored on older firmware) ----------------
   QM_BG:      0x081828   # Quick Menu background

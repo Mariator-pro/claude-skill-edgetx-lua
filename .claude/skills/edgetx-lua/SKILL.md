@@ -41,7 +41,7 @@ Invoke this skill whenever the user works with:
 - **`pitfalls.md`**: CPU and memory limits per script type, Lua 5.3 subset restrictions (no `os`, no `package`, no string methods), value-range traps, font/BOLD traps, OpenTX→EdgeTX gotchas worth knowing even if migration is not the focus.
 - **`debugging.md`**: `print()` (simulator only), VS Code Dev Kit and Companion simulators, runtime errors, common "script halted" causes, and how to verify before flashing to the radio.
 - **`patterns.md`**: Canonical, source-verified implementations of recurring building blocks (link detection, throttled sensor existence, ...) so every project implements them the same way.
-- **`themes.md`**: Color theme creation: `/THEMES/` folder layout, `theme.yml` format, the 13 OS color variables, the authoritative color→UI-element map, contrast pairs to keep legible, the in-radio theme editor workflow, and how the slots map to Lua `COLOR_THEME_*` constants.
+- **`themes.md`**: Color theme creation: `/THEMES/` folder layout, `theme.yml` format, the 13 OS color variables, the source-verified color→UI-element map (simulator-confirmed), contrast pairs to keep legible, the in-radio theme editor workflow, and how the slots map to Lua `COLOR_THEME_*` constants.
 - **`templates/*.lua`**: Minimal working skeletons for each script type. Copy-paste starting points.
 - **`templates/theme.yml`**: Commented starting point for a color theme (all 13 variables with their roles inline).
 

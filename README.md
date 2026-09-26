@@ -30,13 +30,13 @@ A Claude Code Skill is a small bundle of documentation that Claude loads automat
 - **Hardware specs**: color radios (TX16S Mk I–III, TX15, Horus X10/X12S) and notes on B/W radios (Boxer, Pocket, TX12, T-Pro)
 - **Common pitfalls**: silent-load failures, filename limits, value-range gotchas, the Lua subset's restrictions
 - **Debugging tips**: simulator workflow (VS Code EdgeTX Dev Kit, Companion), `print()` console, `pcall` patterns
-- **Color themes**: `theme.yml` structure, the 13 OS color variables, the authoritative color→UI-element map, and how those slots map to the Lua `COLOR_THEME_*` constants
+- **Color themes**: `theme.yml` structure, the 13 OS color variables, the source-verified color→UI-element map, and how those slots map to the Lua `COLOR_THEME_*` constants
 - **Patterns**: canonical, source-verified building blocks that recur across projects (e.g. link detection for every telemetry system)
 - **Templates**: minimal working boilerplates for all five script types, plus a commented `theme.yml`
 
 When you ask Claude something like *"build me a widget that shows RSSI as a bar"* or *"why does my telemetry script not load on the radio?"*, Claude will read the relevant pieces of the skill and answer with EdgeTX-specific knowledge instead of generic Lua advice.
 
-Lua content is verified against the [EdgeTX source code](https://github.com/EdgeTX/edgetx) (v2.12.4) and, where needed, in the simulator or on a real radio; the official [EdgeTX Lua Reference Guide](https://luadoc.edgetx.org/) serves as a secondary source (it is partly outdated, baseline 2.10). The theme reference is verified against the [EdgeTX themes repo](https://github.com/EdgeTX/themes) (`structure.md`) and the [EdgeTX User Manual](https://manual.edgetx.org/color-radios/radio-settings/themes).
+Lua content is verified against the [EdgeTX source code](https://github.com/EdgeTX/edgetx) (v2.12.4) and, where needed, in the simulator or on a real radio; the official [EdgeTX Lua Reference Guide](https://luadoc.edgetx.org/) serves as a secondary source (it is partly outdated, baseline 2.10). The theme color map is verified against the EdgeTX source code (v2.12.4) and confirmed in the simulator with a diagnostic theme; the color list in the [EdgeTX themes repo](https://github.com/EdgeTX/themes) (`structure.md`) is outdated and only used for folder layout. See also the [EdgeTX User Manual](https://manual.edgetx.org/color-radios/radio-settings/themes).
 
 ---
 
