@@ -167,6 +167,7 @@ end
 ## File / SD card pitfalls
 
 - **Case in paths:** on the radio FatFs keeps the spelling but matches case-insensitively (`thirdparty/FatFs/ffconf.h`, v2.12.4), so `/scripts/x.lua` finds `/SCRIPTS/X.lua`. A simulator uses the host file system, which is case-sensitive on Linux. Write paths exactly as they are named on the card.
+- **Data files loaded with the default `loadScript(path)` can go stale on the radio.** The default mode `"bt"` writes a `.luac` with the `.lua`'s timestamp and prefers it at equal timestamps (FAT: 2 s resolution), so a quickly rewritten or restored older `.lua` keeps loading the old content. The simulator defaults to `"T"` and never shows it. Load files the script writes with `loadScript(path, "tx")` (`lua/interface.cpp`, v2.12.4; see `script-types.md` → Loading other files).
 - Writes to the SD card **block** the radio's UI for the duration of the write. Avoid frequent writes: buffer in RAM and flush on exit or every few seconds at most.
 - The SD card is unmounted briefly during firmware updates; don't keep file handles across reboots (you can't anyway, but it bears stating).
 

@@ -471,7 +471,7 @@ local function readAll(path)
 end
 -- lines: for line in string.gmatch(text, "[^\n]+") do ... end
 ```
-For structured data, writing the file as a Lua table (`return { ... }`) and loading it with `loadScript` avoids parsing altogether.
+For structured data, writing the file as a Lua table (`return { ... }`) and loading it with `loadScript(path, "tx")` avoids parsing altogether. Use the mode `"tx"` for any file the script rewrites: with the default mode the radio writes a `.luac` next to it and can keep loading that stale copy (see `script-types.md` → Loading other files).
 
 Notes:
 - `io.lines`, `io.popen`, `os.execute` are **not** available.
@@ -518,12 +518,12 @@ Notes:
 Reference: <https://luadoc.edgetx.org/lua-api-reference/filesystem/dir>
 
 ### JSON
-There is no JSON support built in. Simplest is to store data as a Lua table (`return { ... }`) and load it with `loadScript` (see Persistent settings pattern), no parser needed.
+There is no JSON support built in. Simplest is to store data as a Lua table (`return { ... }`) and load it with `loadScript(path, "tx")` (see Persistent settings pattern), no parser needed.
 
 ### Persistent settings pattern
 **Widget `options` are read-only for the script.** EdgeTX copies the stored settings *into* the `options` table (on `create` and when the user edits the dialog, then calls `update`); nothing flows back (`lua_widget.cpp`, v2.12.4). Values a script writes into `options` are never saved and get overwritten on the next `update`. Use options only for what the user sets in the dialog. (confirmed in the TX16S MK3 simulator)
 
-Script-owned data (counters, home position, learned values) goes into your own file, for widgets and tools alike, e.g. `/SCRIPTS/<NAME>/config.lua`: write it with `io.write` (ideally as `return { ... }`) and read it back with `loadScript` or the `readAll` pattern above. Avoid storing data inside `/SCRIPTS/TOOLS/`: a subfolder there that contains `main.lua` shows up as a tool itself.
+Script-owned data (counters, home position, learned values) goes into your own file, for widgets and tools alike, e.g. `/SCRIPTS/<NAME>/config.lua`: write it with `io.write` (ideally as `return { ... }`) and read it back with `loadScript(path, "tx")` (mode `"tx"`: text only, no `.luac`, see `script-types.md` → Loading other files) or the `readAll` pattern above. Avoid storing data inside `/SCRIPTS/TOOLS/`: a subfolder there that contains `main.lua` shows up as a tool itself.
 
 ---
 

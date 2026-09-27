@@ -293,3 +293,20 @@ local helper = assert(loadScript("/SCRIPTS/TOOLS/mytool/helper.lua"))()
   local chunk = loadScript and loadScript("/SCRIPTS/MYAPP/core.lua")
   local core = chunk and chunk()   -- nil if missing, broken, or on the desktop
   ```
+- **Mode argument and `.luac` files:** `loadScript(path, mode)` (`luaLoadScriptFileToState`, `lua/interface.cpp`, v2.12.4):
+
+  | Mode | Loads | Writes a `.luac` |
+  | --- | --- | --- |
+  | `"bt"` (default on the radio) | text or binary, **whichever is newer; the binary wins at equal timestamps** | yes, when the text is newer or no `.luac` exists |
+  | `"T"` (default in the simulator) | text, binary only if there is no text | yes |
+  | `"t"` / `"b"` | text only / binary only | `"t"`: yes |
+  | add `"x"` (e.g. `"tx"`) | as the letters before | **no** |
+  | add `"c"` | text, always recompiled | yes, forced |
+
+  The written `.luac` gets the **timestamp of the `.lua`**, not the time it was written, and FAT resolves only 2 s. So a `.lua` rewritten within the same 2 s after a load, or an older `.lua` copied back from a PC, is shadowed on the radio by the stale `.luac`: `"bt"` keeps loading the old content. The simulator (`"T"`) never shows this.
+  - **Code** (`core.lua`, helpers): the default is fine, the `.luac` saves RAM and load time.
+  - **Data files the script writes itself** (`config.lua`, logs as `return { ... }`): always load with **`"tx"`**: text only, no `.luac` is written, an existing one is ignored.
+    ```lua
+    local ok, chunk, err = pcall(loadScript, "/SCRIPTS/MYAPP/config.lua", "tx")
+    if not ok or not chunk then --[[ missing or broken: err has the reason ]] end
+    ```
