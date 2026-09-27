@@ -99,7 +99,21 @@ What is **NOT** available: do not even try:
   The same trap hits **`VBOTTOM`** (`0x200`, also inside the font bits): `SMLSIZE + VBOTTOM` renders as `DBLSIZE`, and without a size flag the text becomes `TINSIZE` (`libopenui_defines.h`, v2.12.4; confirmed in the TX16S MK3 simulator). Don't use `VBOTTOM`; compute the y position from `lcd.sizeText` instead.
 
   Bold exists only at standard size (`BOLD` alone). `DBLSIZE`, `XXLSIZE` and `XLSIZE` are bold by design, `MIDSIZE` and smaller are regular. Never combine `BOLD` with a size: a layout measured with the plain font then overflows. (Verified: EdgeTX 2.12.4 source `fonts.h`/`api_general.cpp`, heights of "Ag" from `lcd.sizeText` in the TX16S (480×272) and TX16S MK3 (800×480) simulator profiles.)
-- **Non-ASCII characters in drawn text don't render.** The built-in fonts are basic-Latin only; typographic punctuation (em/en dashes `—` `–`, curly quotes `“ ” ‘ ’`, ellipsis `…`, non-breaking space) has no glyph and draws as a *blank gap*, not a fallback box: `"change — no data"` shows as `"change  no data"`. Keep every user-facing string pure ASCII (`-`, `"`, `'`, `...`), including empty-value placeholders (`"-"`, not `"—"`). Editors often auto-"smarten" `--` into `—` on paste: check the literal.
+- **Only some non-ASCII characters render (color radios), and `±` breaks the large fonts.** Lua strings are drawn as UTF-8; the built-in fonts carry ASCII plus a few extra ranges, which differ per font (glyph ranges in `fonts/lvgl/make_fonts.sh`, flag-to-font table in `gui/colorlcd/fonts.cpp`, v2.12.4; default English font set, other UI languages add their own glyphs). Every cell below is confirmed in the TX16S MK3 simulator with a glyph test widget (each character between two `|`), except `² µ ·` in `XLSIZE`: that line shared a page with `±`, which crashed it.
+
+  | Glyphs | `TINSIZE`, `SMLSIZE`, standard, `BOLD` | `MIDSIZE`, `DBLSIZE` | `XXLSIZE`, `XLSIZE` |
+  | --- | :---: | :---: | :---: |
+  | ASCII `0x20-0x7F` | yes | yes | yes |
+  | Degree sign `°` (U+00B0) | yes | yes | yes |
+  | Accented Latin letters (U+00C0-U+017F: `ä ö ü ß é ñ` ...) | yes | yes | dropped |
+  | Bullet `•` (U+2022), `≥` (U+2265) | yes | dropped | dropped |
+  | Dashes, curly quotes, ellipsis (`— “ …`), `² µ ·` | dropped | dropped | dropped |
+  | **Plus-minus `±` (U+00B1)** | drawn as `À` | drawn as `À` | **garbage block or crash** |
+
+  - **Dropped** means the character vanishes with zero width, no gap and no fallback box: `"|—|"` draws as `"||"`, so `"change — no data"` shows as `"change  no data"`. Besides the table this applies to the non-breaking space and the rest of U+00A0-U+00BF (`²`, `µ`, `·`, `©` ...).
+  - **`±` is worse than missing:** it is drawn with the glyph that follows `°` in the font. In the smaller fonts that is `À`; `XXLSIZE` and `XLSIZE` have no glyph after `°`, so EdgeTX renders unrelated memory as a glyph: a block of pixel garbage about 500 px wide (drawn over text above it too), or the simulator crashes and keeps crashing on every start while the widget still draws it. Why only U+00B1 is hit is not confirmed in the source (likely the font's character map runs one entry past `°`); `²`, `µ` and `·` right behind it are dropped normally. Never draw `±`, write `+/-`. Assume the radio behaves the same (same font data), not tested there.
+  - The degree sign works in every font, written straight in the source or as its UTF-8 bytes `"\194\176"`.
+  - Keep dashes, quotes and placeholders ASCII (`-`, `"`, `'`, `...`, `"-"` not `"—"`). Editors often auto-"smarten" `--` into `—` on paste: check the literal.
 
 ## API and value pitfalls
 
