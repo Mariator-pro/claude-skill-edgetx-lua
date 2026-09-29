@@ -113,3 +113,54 @@ When the user can remap sensor names (e.g. per model in a config), keep the name
 **Choosing `interval`:** use 1 s everywhere so all scripts react alike; it is independent of any config reload cadence.
 
 **Host tests:** a test that adds or removes a sensor on a running state must either advance `now` past `interval` or reset `state.sensorCheckAt = nil`; otherwise it sees the cached result.
+
+## Armed state from the flight-mode text (CRSF)
+
+**Purpose:** know whether the model is armed, for flight-controller firmware that reports it in the CRSF flight-mode text (sensor `FM`): Betaflight, INAV, ArduPilot. Without a "disarmed" marker seen on the current link the state counts as unknown, so a firmware that never marks disarmed is not taken for "armed forever".
+
+```lua
+-- Disarmed marker in the FM text: Betaflight appends * ! ?, ArduPilot *,
+-- INAV sends OK / WAIT / !ERR. "!FS!" (failsafe) is armed despite its "!".
+local INAV_DISARMED = { OK = true, WAIT = true, ["!ERR"] = true }
+local function fmDisarmed(fm)
+  if fm == "!FS!" then return false end
+  if INAV_DISARMED[fm] then return true end
+  local last = string.sub(fm, -1)
+  return last == "*" or last == "!" or last == "?"
+end
+
+-- armed, known. Known only once a disarmed marker was seen on this link
+-- (state.disarmSeen): some setups never send one, and a text without a marker
+-- alone proves nothing. Clear state.disarmSeen when the link is lost.
+local function armedFromFM(state, fm)
+  if type(fm) ~= "string" or fm == "" then return false, false end
+  if fmDisarmed(fm) then
+    state.disarmSeen = true
+    return false, true
+  end
+  if not state.disarmSeen then return false, false end
+  return true, true
+end
+```
+
+Usage: call it once per tick with the `FM` value from the read step (`nil` when the sensor is missing, see "Sensor existence" above), in the evaluation, where `state` lives. Reset where the link loss is handled:
+
+```lua
+if lost then state.disarmSeen = nil end           -- next to linkLost (see "Link detection")
+local armed, known = armedFromFM(state, snap.fm)
+if not known then --[[ fall back: no arm edge, e.g. act on GPS fix / movement instead ]] end
+```
+
+An arm edge (disarmed → armed) needs `known` on both sides; a display "ARMED" shows `armed` (which is false while unknown).
+
+**Why** (flight-controller sources, as researched for CRSF telemetry; EdgeTX passes the text unchanged, up to 16 characters, `telemetry/crossfire.cpp` `setTelemetryText`, v2.12.4):
+- Betaflight (`src/main/telemetry/crsf.c` `crsfFrameFlightMode()`, master `744f95fa31`): mode name, plus `*` when disarmed and ready, `!` when arming is blocked, `?` when GPS Rescue is not available; armed without a marker; `!FS!` in failsafe.
+- INAV (`src/main/telemetry/crsf.c` `crsfFrameFlightMode()`, master `4526102326`): never a marker; disarmed it sends `OK`, `WAIT` (no GPS or home fix) or `!ERR` (arming blocked) instead of a mode name; `!FS!` in failsafe.
+- ArduPilot (`libraries/AP_RCTelemetry/AP_CRSF_Telem.cpp` `calc_flight_mode()`, master): 4-character mode name plus `*` while disarmed **only** with `RC_OPTIONS` bit 12 (`CRSF_FM_DISARM_STAR`, 4096). The default (`RC_OPTIONS` = 32) never marks disarmed, which is why "armed" needs a marker seen first. In ExpressLRS MAVLink mode the TX module builds the text itself and always appends `*` while disarmed.
+- No ArduPilot mode name equals an INAV disarmed text or ends in `!` or `?`, so one parser serves all three without knowing the firmware.
+
+**Host tests:** feed a disarmed text before expecting `armed == true`; a fresh state with an armed text returns `false, false`.
+
+**Edge cases:**
+- Connecting to a model that is already armed (link regained in flight) stays unknown until the next disarm: no false arm edge.
+- `!FS!` before any disarmed text is unknown, like every armed text.
