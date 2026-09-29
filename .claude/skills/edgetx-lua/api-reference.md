@@ -313,8 +313,13 @@ Used by tools that emulate a sensor over SPort. `physicalId` 0..27, `primId` 0x1
 ### Crossfire telemetry
 ```lua
 crossfireTelemetryPush(cmdId, payload)
-crossfireTelemetryPop()    -- returns cmd, data array
+crossfireTelemetryPop()    -- returns cmd, data array; no value at all when the queue is empty
 ```
+
+**Who shares the receive queue** (`lua/api_general.cpp` `getTelemetryQueue`, `lua/lua_widget.cpp` `LuaScriptManager::createTelemetryQueue`, `telemetry/telemetry.cpp` `pushTelemetryDataToQueues`, v2.12.4). `crossfireTelemetryPop` (and `sportTelemetryPop`) consume the frame they return; which queue they read depends on the caller:
+- **Color radios, widgets and tools:** every widget instance and every running tool gets its **own** queue, created on its first pop (in `refresh` as well as `background`). Each incoming frame is copied into **every** registered queue. Two widgets popping at the same time therefore never steal frames from each other.
+- **Function and mix scripts, and all scripts on B/W radios:** one **shared** global queue. Two such scripts popping take frames away from each other.
+- **Inside one script** all code shares that script's queue: if two parts of the same widget each pop and drop the frames they don't need, one loses the other's replies. Pop once per cycle and hand each frame to every consumer.
 
 ### Audio / haptics (allowed in any script type)
 ```lua
